@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private  TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            Toast.makeText(getApplicationContext(), "Texture View is available.", Toast.LENGTH_SHORT).show();
             setupCamera(width, height);
+            connectCamera();
         }
 
         @Override
@@ -61,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
             mCameraDevice = camera;
+        Toast.makeText(getApplicationContext(),
+                "Camera connection made!", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -115,10 +117,23 @@ public class MainActivity extends AppCompatActivity {
         if (mTextureView.isAvailable())
         {
             setupCamera(mTextureView.getWidth(), mTextureView.getHeight());
+            connectCamera();
         }
         else
         {
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CAMERA_PERMISSION_RESULT){
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(getApplicationContext(),
+                        "Application will not run without camera services.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
