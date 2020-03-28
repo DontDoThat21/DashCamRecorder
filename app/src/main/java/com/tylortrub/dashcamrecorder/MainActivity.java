@@ -17,8 +17,10 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -26,6 +28,8 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.File;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,6 +90,12 @@ public class MainActivity extends AppCompatActivity {
     private String mCameraId;
     private Size mPreviewSize;
     private CaptureRequest.Builder mCaptureRequestBuilder;
+
+    private boolean mIsRecording = false;
+
+    private File mVideoFolder;
+    private String mVideoFileName;
+
     private static SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 0);
@@ -108,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createVideoFolder();
 
         mTextureView = (TextureView) findViewById(R.id.textureView);
     }
@@ -311,7 +323,32 @@ public class MainActivity extends AppCompatActivity {
         {
             return Collections.min(bigEnough, new CompareSizeByArea());
         } else {
+            // We still can't find an optimal size? OK, search for 1920x1080 if avail.
+            for (Size choice : choices)
+            {
+                if (choice.getWidth() == 1920)
+                {
+                    if (choice.getHeight() == 1080)
+                    {
+                        bigEnough.add(choice);
+                    }
+                }
+            }
+            if (bigEnough.size() > 0) // did we STILL not find a valid optimal res? OK.. just assume first entry which may be a slightly off aspect ratio view.
+            {
+                return Collections.min(bigEnough, new CompareSizeByArea()); // return smallest size, but expect a 1920x1080 at this particular call.
+            }
             return choices[0]; // still have to return something, not a great option but needed.
+        }
+    }
+
+    private void createVideoFolder()
+    {
+        File movieFile = getExternalFilesDir("MOVIESTESTING123");
+        mVideoFolder = new File(movieFile, "cam2VidImg");
+        if (!mVideoFolder.exists())
+        {
+            mVideoFolder.mkdirs();
         }
     }
 }
